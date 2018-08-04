@@ -1,0 +1,14 @@
+# status x0 - x7
+EF CD AB 89 67 45 23 01
+# variables
+00 00 00 00 00 00 00 00
+# S Box table
+0C 05 06 0B 09 00 0A 0D
+03 0E 0F 08 04 07 01 02
+# key data
+FF FF FF FF FF FF FF FF
+FF FF 00 00 00 00 00 00
+# not used
+00 00 00 00 00 00 00 00
+00 00 00 00 00 00 00 00
+###EOF

@@ -1,0 +1,153 @@
+# Present Cipher
+.equ x0 0x00
+.equ x6 0x06
+.equ x7 0x07
+.equ cnt 0x08
+.equ rnd 0x09
+.equ rnd 0x09
+.equ sbox 0x10
+.equ k0 0x20
+.equ k1 0x21
+.equ k7 0x27
+# start
+# add round keys
+.lbl mnlp
+jsr rndky
+.lbl sbst
+# S Box
+# S Box located in RAM at address sbox
+# cnt in r1
+mvi cnt, r0
+mvi 0x07, r1
+sts r1, r0
+mvi sbox, r2
+# status x[i] in r0
+.lbl sblp
+lds r1, r0
+mvi 0x04, r3
+srl r3, r0
+add r2, r0
+lds r0, r0
+sll r3, r0
+lds r1, r1
+sll r3, r1
+srl r3, r1
+add r2, r1
+lds r1, r1
+lor r1, r0
+mvi cnt, r3
+lds r3, r1
+prw r1, r0
+dec r1
+bni perm
+sts r1, r3
+jmp sblp
+.lbl perm 
+# start permutation
+mvi 0x07, r1
+mvi x7, r0
+.lbl prm1
+prp r1, r2
+sts r2, r0
+dec r0
+dec r1
+bni prmnd
+jmp prm1
+.lbl prmnd
+# compute next round key on the fly
+# rotate 80 bit key left by 61 bits
+# most significant key byte starts at k0
+# load the 10-byte rotator
+mvi k0, r1
+lds r1, r0
+mvi 0x09, r2
+.lbl rtlp1
+prw r2, r0
+dec r2
+bni rtnd1
+inc r1
+lds r1, r0
+jmp rtlp1
+.lbl rtnd1
+# read the 10-byte rotator
+mvi 0x09, r0
+prs r0, r2
+# perform S Box on most significant nibble
+mvi sbox, r0
+mov r2, r1
+mvi 0x04, r3
+srl r3, r2
+add r2, r0
+lds r0, r0
+sll r3, r0
+sll r3, r1
+srl r3, r1
+lor r1, r0
+# restore in most significant key byte
+mvi k0, r1
+sts r0, r1
+inc r1
+# read remaining 9 bytes of shifter
+mvi 0x08, r2
+.lbl rtlp2
+prs r2, r0
+sts r0, r1
+dec r2
+bni rtnd2
+inc r1
+jmp rtlp2
+.lbl rtnd2
+# add round constant
+# load round counter + offset 
+mvi rnd, r0
+lds r0, r0
+inc r0
+mov r0, r1
+# operation on the k7 byte
+mvi 0x01, r2
+srl r2, r0
+mvi k7, r2
+lds r2, r3
+xor r0, r3
+sts r3, r2
+# operation on the k8 byte
+inc r2
+mvi 0x07, r0
+sll r0, r1
+lds r2, r3
+xor r1, r3
+sts r3, r2
+# end round constant
+# end round key on the fly
+# terminate main round loop
+mvi rnd, r1
+lds r1, r0
+mvi 0x1E, r2
+sub r0, r2
+bzi fnrndky
+inc r0
+sts r0, r1
+jmp mnlp
+.lbl fnrndky
+jsr rndky
+.lbl lpnd
+# end of program
+.end
+nop
+# round key addition
+.lbl rndky
+# key address in r0
+mvi k0, r0
+# cnt in r1
+mvi x7, r1
+.lbl rndkylp
+lds r1, r2
+lds r0, r3
+xor r3, r2
+sts r2, r1 
+dec r1
+bni rndkynd
+inc r0
+jmp rndkylp
+.lbl rndkynd
+ret
